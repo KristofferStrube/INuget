@@ -1,5 +1,6 @@
 using KristofferStrube.INuget.Client.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Text.RegularExpressions;
@@ -43,6 +44,14 @@ namespace KristofferStrube.INuget.Client.Pages
                 await LookupPackageVersion();
             }
             redirect = true;
+        }
+
+        public async Task Enter(KeyboardEventArgs e)
+        {
+            if (e.Code == "Enter" || e.Code == "NumpadEnter")
+            {
+                await FindPackage();
+            }
         }
 
         public async Task FindPackage()
@@ -114,7 +123,10 @@ namespace KristofferStrube.INuget.Client.Pages
                 types = mainAssembly
                     .GetExportedTypes()
                     .Where(t => !t.IsGenericType)
+                    .Where(t => t.GetCustomAttribute<ObsoleteAttribute>() is null)
+                    .Where(t => t.GetConstructors().Where(c => c.GetCustomAttribute<ObsoleteAttribute>() is null && c.IsPublic).Count() != 0)
                     .ToList();
+
                 namespaces = new("root");
                 foreach (Type type in types)
                 {

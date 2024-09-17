@@ -7,7 +7,6 @@
 
     @if (Constructors is { Length: > 0 } constructors)
     {
-        <h4>Constructors</h4>
         @foreach (ConstructorInfo info in constructors)
         {
             <ConstructorPresenter Constructor="info" />
