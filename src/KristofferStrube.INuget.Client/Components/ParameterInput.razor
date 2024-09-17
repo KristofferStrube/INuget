@@ -1,0 +1,15 @@
+﻿@if (Parameter.ParameterType == typeof(string))
+{
+    <input @bind-value=Value @bind-value:event="oninput" />
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public required ParameterInfo Parameter { get; set; }
+
+    [Parameter]
+    public required object Value { get; set; }
+
+    [Parameter]
+    public EventCallback<object> ValueChanged { get; set; }
+}

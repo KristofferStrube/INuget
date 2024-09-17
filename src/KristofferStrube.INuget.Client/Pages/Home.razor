@@ -1,0 +1,66 @@
+﻿@page "/"
+@page "/packages"
+@page "/packages/{PackageName}"
+@page "/packages/{PackageName}/{PackageVersion}"
+
+@if (PackageName is null)
+{
+    <PageTitle>INuget</PageTitle>
+
+    <h1>INuget</h1>
+    <p>Select a NuGet package</p>
+
+    <label for="PackageName">Package: </label>
+    <input id="PackageName" @bind-value=packageNameInput />
+    <button @onclick=FindPackage>Find</button>
+}
+else if (PackageVersion is null)
+{
+    <PageTitle>INuget | @PackageName</PageTitle>
+
+    <h1>INuget | @PackageName</h1>
+    <p>Select a package version</p>
+
+    <label for="PackageVersion">Version: </label>
+    <select id="PackageVersion" @bind=packageVersionInput @bind:after=LookupPackageVersion>
+        <option value="">Select Version</option>
+        @foreach (var version in versions)
+        {
+            <option value="@version.Version">@version.Version</option>
+        }
+    </select>
+}
+else
+{
+    <PageTitle>INuget | @PackageName @PackageVersion</PageTitle>
+    <h1>INuget | @PackageName @PackageVersion</h1>
+
+    @if (downloads is not null)
+    {
+        <p>Downloading dependencies</p>
+        @foreach((string dependency, bool downloaded) in downloads)
+        {
+            <div class="@(downloaded ? "downloaded" : "downloading")">@dependency</div>
+        }
+    }
+    else if (namespaces is not null)
+    {
+        <p>Namespaces in package</p>
+
+        @foreach (NamespaceHierarchy hierarchy in namespaces.ChildHierarchies)
+        {
+            <NamespaceHierarchyPresenter NamespaceHierarchy="hierarchy" Open="true" />
+        }
+    }
+    else
+    {
+        <p>Finding dependencies for package</p>
+    }
+}
+
+@if (error is not null)
+{
+    <span class="warning">@error</span>
+}
+
+

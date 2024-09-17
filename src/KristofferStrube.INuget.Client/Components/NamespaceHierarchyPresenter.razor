@@ -1,0 +1,27 @@
+﻿<details open=@Open>
+    <summary>
+        <h2>
+            @NamespaceHierarchy.Name
+        </h2>
+    </summary>
+    <div class="indent">
+    <div class="types-listing">
+        @foreach (Type type in NamespaceHierarchy.ChildTypes)
+        {
+            <TypePresenter Type="type" />
+        }
+    </div>
+        @foreach (NamespaceHierarchy child in NamespaceHierarchy.ChildHierarchies)
+        {
+            <NamespaceHierarchyPresenter NamespaceHierarchy="child" Open=@(Open && NamespaceHierarchy.ChildTypes.Count is 0) />
+        }
+    </div>
+</details>
+
+@code {
+    [Parameter]
+    public bool Open { get; set; } = false;
+
+    [Parameter, EditorRequired]
+    public required NamespaceHierarchy NamespaceHierarchy { get; set; }
+}

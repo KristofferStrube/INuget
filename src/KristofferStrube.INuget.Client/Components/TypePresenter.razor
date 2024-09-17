@@ -1,0 +1,26 @@
+﻿<details>
+    <summary>
+        <h3>
+            <code>@Settings.Name(Type)</code>
+        </h3>
+    </summary>
+
+    @if (Constructors is { Length: > 0 } constructors)
+    {
+        <h4>Constructors</h4>
+        @foreach (ConstructorInfo info in constructors)
+        {
+            <ConstructorPresenter Constructor="info" />
+        }
+    }
+</details>
+
+@code {
+    [Parameter, EditorRequired]
+    public required Type Type { get; set; }
+
+    private ConstructorInfo[] Constructors => Type.GetConstructors()
+        .Where(c => c.GetCustomAttribute<ObsoleteAttribute>() is null)
+        .ToArray();
+
+}

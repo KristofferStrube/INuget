@@ -1,0 +1,13 @@
+﻿.indent {
+    padding-left: 20px;
+}
+
+.types-listing {
+    margin-bottom: 10px;
+}
+
+details {
+    border-top: 1px solid black;
+    border-left: 1px solid black;
+    padding-left: 10px;
+}

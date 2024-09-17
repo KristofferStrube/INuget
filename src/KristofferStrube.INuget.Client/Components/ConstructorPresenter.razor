@@ -1,0 +1,46 @@
+﻿<div class="card">
+    <div class="header">new @Settings.Name(Constructor.DeclaringType!)</div>
+    <div class="indent">
+        @foreach (ParameterInfo parameter in arguments.Keys)
+        {
+            <div>
+                <b>@parameter.Name</b>
+            </div>
+            <div class="object-value">
+                @if (Settings.Editors.FirstOrDefault(editor => editor.CanHandle(parameter.ParameterType)) is { } editor)
+                {
+                    Dictionary<string, object?> parameters = new() { ["Value"] = arguments[parameter], ["Setter"] = (object? value) => { arguments[parameter] = value; } };
+
+                    <ErrorBoundary>
+                        <ChildContent>
+                            <DynamicComponent Type=editor.EditorType(parameter.ParameterType) Parameters="parameters" />
+                        </ChildContent>
+                        <ErrorContent>
+                            <div class="warning">Failed to create editor for type '@Settings.Name(parameter.ParameterType)'.</div>
+                        </ErrorContent>
+                    </ErrorBoundary>
+                }
+                else
+                {
+                    <div class="warning">Editor for type '@Settings.Name(parameter.ParameterType)' was not supported.</div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private Dictionary<ParameterInfo, object?> arguments = [];
+
+    [Parameter, EditorRequired]
+    public required ConstructorInfo Constructor { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        arguments.Clear();
+        foreach (ParameterInfo parameter in Constructor.GetParameters())
+        {
+            arguments.Add(parameter, null);
+        }
+    }
+}
