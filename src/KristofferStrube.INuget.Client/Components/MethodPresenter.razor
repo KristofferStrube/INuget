@@ -1,0 +1,115 @@
+﻿<div class="card @(Disabled ? "disabled-border" : "")">
+    <div class="header @(Disabled ? "disabled-background" : "")">
+        <h4>
+            @Method.Name
+        </h4>
+    </div>
+    <div class="indent">
+        <div class="grid">
+            @foreach (ParameterInfo parameter in arguments.Keys)
+            {
+                <div>
+                    <b>@parameter.Name</b>
+                </div>
+                <div class="object-value">
+                    @if (!Disabled)
+                    {
+                        @if (Settings.Editors.FirstOrDefault(editor => editor.CanHandle(parameter.ParameterType)) is { } editor)
+                        {
+                            Dictionary<string, object?> parameters = new() { ["Value"] = arguments[parameter], ["Setter"] = (object? value) => { arguments[parameter] = value; } };
+
+                            <ErrorBoundary>
+                                <ChildContent>
+                                    <DynamicComponent Type=editor.EditorType(parameter.ParameterType) Parameters="parameters" />
+                                </ChildContent>
+                                <ErrorContent>
+                                    <div class="warning">Failed to create editor for type '@Settings.Name(parameter.ParameterType)'.</div>
+                                </ErrorContent>
+                            </ErrorBoundary>
+                        }
+                        else
+                        {
+                            <div class="warning">Editor for type '@Settings.Name(parameter.ParameterType)' was not supported.</div>
+                        }
+                    }
+                </div>
+            }
+        </div>
+        <div>
+            <button @onclick=Invoke class="@(Disabled ? "disabled-background disabled-border" : "")">Invoke</button>
+            @if (error is not null)
+            {
+                <span class="warning">@error</span>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private Dictionary<ParameterInfo, object?> arguments = [];
+    private string? error;
+
+    [Parameter, EditorRequired]
+    public required MethodInfo Method { get; set; }
+
+    [Parameter, EditorRequired]
+    public required object Object { get; set; }
+
+    [Parameter, EditorRequired]
+    public required Action<(bool voidResult, object? result)> Invoked { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        arguments.Clear();
+        foreach (ParameterInfo parameter in Method.GetParameters())
+        {
+            arguments.Add(parameter, null);
+        }
+    }
+
+    private async Task Invoke()
+    {
+        try
+        {
+            error = null;
+            StateHasChanged();
+            object? result = Method.Invoke(Object, Method.GetParameters().Select(p => arguments[p]).ToArray());
+            if (Method.ReturnType == typeof(void))
+            {
+                Invoked((true, null));
+            }
+            else
+            {
+                if (Method.ReturnType.IsConstructedGenericType && Method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+                {
+                    var task = (Task)result!;
+                    await task;
+                    var resultProperty = task.GetType().GetProperty("Result")!;
+                    Invoked((false, resultProperty.GetValue(task)));
+                }
+                if (Method.ReturnType.IsConstructedGenericType && Method.ReturnType.GetGenericTypeDefinition() == typeof(ValueTask<>))
+                {
+                    var task = (ValueTask)result!;
+                    await task;
+                    var resultProperty = task.GetType().GetProperty("Result")!;
+                    Invoked((false, resultProperty.GetValue(task)));
+                }
+                else
+                {
+                    var task = (Task)result!;
+                    await task;
+                    var resultProperty = task.GetType().GetProperty("Result")!;
+                    Invoked((false, resultProperty.GetValue(task)));
+                }
+                Invoked((false, result));
+            }
+        }
+        catch (Exception e)
+        {
+            error = $"{Settings.Name(e.InnerException!.GetType())}: {e.InnerException.Message}";
+        }
+    }
+}
