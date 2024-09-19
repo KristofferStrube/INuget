@@ -42,21 +42,48 @@
                 <span class="warning">@error</span>
             }
         </div>
+        @if (returned)
+        {
+            <div class="grid">
+                <div>Response</div>
+                <div>
+                    @if (voidResult)
+                    {
+                        <span>Invocation was successful.</span>
+                    }
+                    else if (returnValue is not null)
+                    {
+                        Dictionary<string, object?> parameters = new()
+                        {
+                            ["Value"] = returnValue,
+                            ["Setter"] = (object? o) => { },
+                            ["SingleLevelOpenDetails"] = true
+                        };
+                        Type componentType = typeof(ObjectEditor<>).MakeGenericType(returnValue.GetType());
+                        <DynamicComponent Type="componentType" Parameters="parameters" />
+                    }
+                    else
+                    {
+                        <span>Invocation successfully returned <code>null</code>.</span>
+                    }
+                </div>
+            </div>
+        }
     </div>
 </div>
 
 @code {
     private Dictionary<ParameterInfo, object?> arguments = [];
     private string? error;
+    private object? returnValue;
+    private bool voidResult;
+    private bool returned;
 
     [Parameter, EditorRequired]
     public required MethodInfo Method { get; set; }
 
     [Parameter, EditorRequired]
     public required object Object { get; set; }
-
-    [Parameter, EditorRequired]
-    public required Action<(bool voidResult, object? result)> Invoked { get; set; }
 
     [Parameter]
     public bool Disabled { get; set; }
@@ -79,7 +106,7 @@
             object? result = Method.Invoke(Object, Method.GetParameters().Select(p => arguments[p]).ToArray());
             if (Method.ReturnType == typeof(void))
             {
-                Invoked((true, null));
+                Invoked(true, null);
             }
             else
             {
@@ -88,28 +115,31 @@
                     var task = (Task)result!;
                     await task;
                     var resultProperty = task.GetType().GetProperty("Result")!;
-                    Invoked((false, resultProperty.GetValue(task)));
+                    Invoked(false, resultProperty.GetValue(task));
                 }
-                if (Method.ReturnType.IsConstructedGenericType && Method.ReturnType.GetGenericTypeDefinition() == typeof(ValueTask<>))
+                else if (Method.ReturnType.IsConstructedGenericType && Method.ReturnType.GetGenericTypeDefinition() == typeof(ValueTask<>))
                 {
                     var task = (ValueTask)result!;
                     await task;
                     var resultProperty = task.GetType().GetProperty("Result")!;
-                    Invoked((false, resultProperty.GetValue(task)));
+                    Invoked(false, resultProperty.GetValue(task));
                 }
                 else
                 {
-                    var task = (Task)result!;
-                    await task;
-                    var resultProperty = task.GetType().GetProperty("Result")!;
-                    Invoked((false, resultProperty.GetValue(task)));
+                    Invoked(false, result);
                 }
-                Invoked((false, result));
             }
         }
         catch (Exception e)
         {
             error = $"{Settings.Name(e.InnerException!.GetType())}: {e.InnerException.Message}";
         }
+    }
+
+    public void Invoked(bool voidResult, object? result)
+    {
+        returned = true;
+        returnValue = result;
+        this.voidResult = voidResult;
     }
 }

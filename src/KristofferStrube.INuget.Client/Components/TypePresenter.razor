@@ -18,6 +18,19 @@
         </details>
     }
 
+    @if (constructedValue is not null)
+    {
+        <br />
+        Dictionary<string, object?> parameters = new()
+                {
+                    ["Value"] = constructedValue,
+                    ["Setter"] = (object? o) => {},
+                    ["SingleLevelOpenDetails"] = true
+                };
+        Type componentType = typeof(ObjectEditor<>).MakeGenericType(constructedValue.GetType());
+        <DynamicComponent Type="componentType" Parameters="parameters" />
+    }
+
     @if (Methods is { Length: > 0 } methods)
     {
         <details open="@(constructedValue is not null)">
@@ -26,29 +39,10 @@
             </summary>
             @foreach (MethodInfo info in methods)
             {
-                <MethodPresenter Method="info" Object="constructedValue" Invoked="e => Console.WriteLine(e.result)" Disabled="constructedValue is null" />
+                <MethodPresenter Method="info" Object="constructedValue" Disabled="constructedValue is null" />
             }
         </details>
     }
 </details>
 
-@code {
-    [Parameter, EditorRequired]
-    public required Type Type { get; set; }
 
-    private object? constructedValue;
-
-    private ConstructorInfo[] Constructors => Type.GetConstructors()
-        .Where(c => c.GetCustomAttribute<ObsoleteAttribute>() is null)
-        .ToArray();
-
-    private MethodInfo[] Methods => Type.GetMethods()
-        .Where(c => c.IsPublic && c.GetCustomAttribute<ObsoleteAttribute>() is null)
-        .ToArray();
-
-    private void Created(object? value)
-    {
-        constructedValue = value;
-        StateHasChanged();
-    }
-}
