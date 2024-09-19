@@ -53,14 +53,23 @@
                     }
                     else if (returnValue is not null)
                     {
-                        Dictionary<string, object?> parameters = new()
+                        @if (Settings.Editors.FirstOrDefault(editor => editor.CanHandle(returnValue.GetType())) is { } editor)
                         {
-                            ["Value"] = returnValue,
-                            ["Setter"] = (object? o) => { },
-                            ["SingleLevelOpenDetails"] = true
-                        };
-                        Type componentType = typeof(ObjectEditor<>).MakeGenericType(returnValue.GetType());
-                        <DynamicComponent Type="componentType" Parameters="parameters" />
+                            Dictionary<string, object?> parameters = new() { ["Value"] = returnValue, ["Setter"] = (object? value) => { returnValue = value; } };
+
+                            <ErrorBoundary>
+                                <ChildContent>
+                                    <DynamicComponent Type=editor.EditorType(returnValue.GetType()) Parameters="parameters" />
+                                </ChildContent>
+                                <ErrorContent>
+                                    <div class="warning">Failed to create editor for type '@Settings.Name(returnValue.GetType())'.</div>
+                                </ErrorContent>
+                            </ErrorBoundary>
+                        }
+                        else
+                        {
+                            <div class="warning">Editor for type '@Settings.Name(returnValue.GetType())' was not supported.</div>
+                        }
                     }
                     else
                     {
