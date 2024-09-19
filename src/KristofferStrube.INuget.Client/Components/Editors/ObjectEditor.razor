@@ -107,12 +107,14 @@
                                     <b>@property.Name</b>
                                 }
                             </div>
-                            var potentialEditor = Settings.Editors.FirstOrDefault(editor => editor.CanHandle(property.PropertyType));
                             <div @key=@($"{property.Name}-value") class="object-value">
-                                @if (potentialEditor is { } editor)
+                                @{
+                                    Type propType = property.GetValue(Value)?.GetType() ?? property.PropertyType;
+                                }
+                                @if (Settings.Editors.FirstOrDefault(editor => editor.CanHandle(propType)) is { } editor)
                                 {
                                     var parameters = new Dictionary<string, object>() { ["ReadOnly"] = ReadOnly, ["OpenDetails"] = OpenDetails, ["Value"] = property.GetValue(Value), ["Setter"] = (object? obj) => { property.SetValue(Value, obj); Setter(Value); } };
-                                    var editorType = editor.EditorType(property.PropertyType);
+                                    var editorType = editor.EditorType(propType);
                                     <ErrorBoundary>
                                         <ChildContent>
                                             <DynamicComponent Type=editorType Parameters=parameters />
@@ -121,7 +123,7 @@
                                             <code>Failed to initialize editor part for @Settings.Name(property.PropertyType)</code>
                                         </ErrorContent>
                                     </ErrorBoundary>
-                                    @if (!ReadOnly && property.GetValue(Value) != null && potentialEditor.EditorType(property.PropertyType).IsConstructedGenericType && potentialEditor.EditorType(property.PropertyType).GetGenericTypeDefinition() == typeof(ObjectEditor<>))
+                                    @if (!ReadOnly && property.GetValue(Value) != null && editorType.IsConstructedGenericType && editorType.GetGenericTypeDefinition() == typeof(ObjectEditor<>))
                                     {
                                         <button class="btn btn-sm btn-warning" style="padding-top:0;padding-bottom:0;" @onclick="() => RemoveProperty(property)">X</button>
                                     }
