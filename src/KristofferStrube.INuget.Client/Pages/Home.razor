@@ -43,6 +43,10 @@ else
             <div class="@(downloaded ? "downloaded" : "downloading")">@dependency</div>
         }
     }
+    else if (types is not null && loadedTypes != types.Count)
+    {
+        <p>Loading types @((int)(loadedTypes / (double)types.Count * 100.00))%</p>
+    }
     else if (namespaces is not null)
     {
         <p>Namespaces in package</p>

@@ -6,7 +6,7 @@
     </div>
     <div class="indent">
         <div class="grid">
-            @foreach (ParameterInfo parameter in arguments.Keys)
+            @foreach (ParameterInfo parameter in arguments?.Keys.ToArray() ?? [])
             {
                 <div>
                     <b>@parameter.Name</b>
@@ -87,7 +87,7 @@
 </div>
 
 @code {
-    private Dictionary<ParameterInfo, object?> arguments = [];
+    private Dictionary<ParameterInfo, object?>? arguments;
     private string? error;
     private object? returnValue;
     private bool voidResult;
@@ -104,7 +104,10 @@
 
     protected override void OnParametersSet()
     {
-        arguments.Clear();
+        if (arguments is not null)
+            return;
+
+        arguments = [];
         foreach (ParameterInfo parameter in Method.GetParameters())
         {
             arguments.Add(parameter, null);

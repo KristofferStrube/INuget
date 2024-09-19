@@ -19,6 +19,7 @@ namespace KristofferStrube.INuget.Client.Pages
         List<Type>? types;
         NamespaceHierarchy? namespaces;
         bool redirect;
+        int loadedTypes = 0;
 
         [Parameter]
         public string? PackageName { get; set; }
@@ -100,12 +101,14 @@ namespace KristofferStrube.INuget.Client.Pages
                 }
                 downloads = dependencies.DistinctBy(d => d.Id).ToDictionary(d => $"{d.Id} ({d.Version})", d => false);
                 await InvokeAsync(StateHasChanged);
+                await Task.Delay(100);
 
                 var mainDependency = dependencies.First();
                 using Stream mainDll = await NugetClient.DLL(mainDependency.Id, mainDependency.Version);
                 var mainAssembly = context.LoadFromStream(mainDll);
                 downloads[$"{mainDependency.Id} ({mainDependency.Version})"] = true;
                 await InvokeAsync(StateHasChanged);
+                await Task.Delay(100);
 
                 await Task.WhenAll(
                     dependencies.Skip(1).Select(async dependency =>
@@ -114,11 +117,11 @@ namespace KristofferStrube.INuget.Client.Pages
                         context.LoadFromStream(dll);
                         downloads[$"{dependency.Id} ({dependency.Version})"] = true;
                         await InvokeAsync(StateHasChanged);
+                        await Task.Delay(10);
                     })
                 );
 
                 downloads = null;
-                await InvokeAsync(StateHasChanged);
 
                 types = mainAssembly
                     .GetExportedTypes()
@@ -128,8 +131,13 @@ namespace KristofferStrube.INuget.Client.Pages
                     .ToList();
 
                 namespaces = new("root");
+                loadedTypes = 0;
                 foreach (Type type in types)
                 {
+                    loadedTypes++;
+                    await InvokeAsync(StateHasChanged);
+                    await Task.Delay(1);
+
                     if (type.Namespace is not { } typeNamespace)
                         return;
 
