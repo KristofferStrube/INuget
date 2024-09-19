@@ -100,8 +100,7 @@
                             <div @key=@($"{property.Name}-label")>
                                 @if (property.GetCustomAttribute<ObsoleteAttribute>() is ObsoleteAttribute { Message: { } obsoleteReason })
                                 {
-                                    <s><b>@property.Name</b></s>
-                                    <TrustedInfo>@obsoleteReason</TrustedInfo>
+                                    <s><b title="@obsoleteReason">@property.Name</b></s>
                                 }
                                 else
                                 {
@@ -122,10 +121,6 @@
                                             <code>Failed to initialize editor part for @Settings.Name(property.PropertyType)</code>
                                         </ErrorContent>
                                     </ErrorBoundary>
-                                    @if (property.Name.Contains("Minutes") && property.PropertyType == typeof(int) && property.GetValue(Value) is int { } minutes)
-                                    {
-                                        <TrustedInfo>@TimeSpan.FromMinutes(minutes).Humanize(4)</TrustedInfo>
-                                    }
                                     @if (!ReadOnly && property.GetValue(Value) != null && potentialEditor.EditorType(property.PropertyType).IsConstructedGenericType && potentialEditor.EditorType(property.PropertyType).GetGenericTypeDefinition() == typeof(ObjectEditor<>))
                                     {
                                         <button class="btn btn-sm btn-warning" style="padding-top:0;padding-bottom:0;" @onclick="() => RemoveProperty(property)">X</button>

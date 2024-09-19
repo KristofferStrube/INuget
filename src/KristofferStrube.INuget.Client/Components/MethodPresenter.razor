@@ -55,7 +55,12 @@
                     {
                         @if (Settings.Editors.FirstOrDefault(editor => editor.CanHandle(returnValue.GetType())) is { } editor)
                         {
-                            Dictionary<string, object?> parameters = new() { ["Value"] = returnValue, ["Setter"] = (object? value) => { returnValue = value; } };
+                            Dictionary<string, object?> parameters = new() {
+                                ["Value"] = returnValue,
+                                ["Setter"] = (object? value) => { returnValue = value; },
+                                ["ReadOnly"] = true,
+                                ["SingleLevelOpenDetails"] = true
+                            };
 
                             <ErrorBoundary>
                                 <ChildContent>
