@@ -62,6 +62,11 @@ else
     }
 }
 
+@if (status is not null)
+{
+    <p>@status</p>
+}
+
 @if (error is not null)
 {
     <span class="warning">@error</span>

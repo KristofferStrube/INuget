@@ -77,7 +77,11 @@
         }
         catch (Exception e)
         {
-            error = $"{Settings.Name(e.InnerException!.GetType())}: {e.InnerException.Message}";
+            error = $"{Settings.Name(e.GetType())}: {e.Message}";
+            if (e.InnerException is not null)
+            {
+                error = $"{Settings.Name(e.InnerException.GetType())}: {e.InnerException.Message}";
+            }
         }
     }
 }

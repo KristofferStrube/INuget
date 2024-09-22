@@ -5,44 +5,50 @@
         </h3>
     </summary>
 
-    @if (Constructors is { Length: > 0 } constructors)
-    {
-        <details open>
-            <summary>
-                Constructors
-            </summary>
-            @foreach (ConstructorInfo info in constructors)
-            {
-                <ConstructorPresenter Constructor="info" Created="Created" Disabled="constructedValue is not null" />
-            }
-        </details>
-    }
-
-    @if (constructedValue is not null)
-    {
-        <br />
-        Dictionary<string, object?> parameters = new()
+    <div class="indent">
+        @if (Constructors is { Length: > 0 } constructors)
+        {
+            <details open>
+                <summary>
+                    Constructors
+                </summary>
+                @foreach (ConstructorInfo info in constructors)
                 {
-                    ["Value"] = constructedValue,
-                    ["Setter"] = (object? o) => {},
-                    ["SingleLevelOpenDetails"] = true
-                };
-        Type componentType = typeof(ObjectEditor<>).MakeGenericType(constructedValue.GetType());
-        <DynamicComponent Type="componentType" Parameters="parameters" />
-    }
+                    <ConstructorPresenter Constructor="info" Created="Created" Disabled="constructedValue is not null" />
+                }
+            </details>
+        }
 
-    @if (Methods is { Length: > 0 } methods)
-    {
-        <details open="@(constructedValue is not null)">
-            <summary>
-                Methods
-            </summary>
-            @foreach (MethodInfo info in methods)
-            {
-                <MethodPresenter Method="info" Object="constructedValue" Disabled="constructedValue is null" />
-            }
-        </details>
-    }
+        @if (constructedValue is not null)
+        {
+            <details open="true">
+                <summary>Instance</summary>
+                @{
+                    Dictionary<string, object?> parameters = new()
+                        {
+                            ["Value"] = constructedValue,
+                            ["Setter"] = (object? o) => { },
+                            ["SingleLevelOpenDetails"] = true
+                        };
+                    Type componentType = typeof(ObjectEditor<>).MakeGenericType(constructedValue.GetType());
+                }
+                <DynamicComponent Type="componentType" Parameters="parameters" />
+            </details>
+        }
+
+        @if (Methods is { Length: > 0 } methods)
+        {
+            <details open="@(constructedValue is not null)">
+                <summary>
+                    Methods
+                </summary>
+                @foreach (MethodInfo info in methods)
+                {
+                    <MethodPresenter Method="info" Object="constructedValue" Disabled="constructedValue is null" />
+                }
+            </details>
+        }
+    </div>
 </details>
 
 

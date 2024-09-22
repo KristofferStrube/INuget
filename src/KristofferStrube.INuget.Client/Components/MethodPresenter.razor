@@ -58,8 +58,7 @@
                             Dictionary<string, object?> parameters = new() {
                                 ["Value"] = returnValue,
                                 ["Setter"] = (object? value) => { returnValue = value; },
-                                ["ReadOnly"] = true,
-                                ["SingleLevelOpenDetails"] = true
+                                ["ReadOnly"] = true
                             };
 
                             <ErrorBoundary>
@@ -149,7 +148,11 @@
         }
         catch (Exception e)
         {
-            error = $"{Settings.Name(e.InnerException!.GetType())}: {e.InnerException.Message}";
+            error = $"{Settings.Name(e.GetType())}: {e.Message}";
+            if (e.InnerException is not null)
+            {
+                error = $"{Settings.Name(e.InnerException.GetType())}: {e.InnerException.Message}";
+            }
         }
     }
 
