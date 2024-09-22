@@ -96,7 +96,7 @@ public partial class Home : ComponentBase
                 packageVersionInput = PackageVersion;
             }
 
-            status = "Finding dependencies for NuGet package.";
+            status = "Resolving dependencies.";
             await InvokeAsync(StateHasChanged);
 
             var dependencies = await NugetClient.Dependencies(PackageName, packageVersionInput);
